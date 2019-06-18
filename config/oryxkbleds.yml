@@ -1,0 +1,7 @@
+brightness: 255
+colors:
+- '#FF0000'
+- '#00FF00'
+- '#FF00FF'
+mode: breathe
+

@@ -1,5 +1,5 @@
 Oryx KB LEDs
-~~~~~~~~~~~~
+~~~~~~~~~~~~~~
 
 ****
 What
@@ -27,3 +27,8 @@ To-Do
 * Implement as a systemd service
 * Add more patterns, functionality, eg.: link breathing speed to network throughput, etc
 * multi-threading, to allow colors and brightness to be modified concurrently
+
+# systemd service for breathe API
+# needs config file for service
+# /etc/oryxkbleds
+# /etc/oryxleds/config.yml

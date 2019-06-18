@@ -1,0 +1,10 @@
+[Unit]
+Description=Set Oryx KB leds writable to all
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/bin/bash -c "/bin/chmod a+w /sys/class/leds/system76::kbd_backlight/color_* /sys/class/leds/system76::kbd_backlight/brightness"
+
+[Install]
+WantedBy=multi-user.target
