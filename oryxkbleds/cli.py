@@ -51,7 +51,7 @@ def set_colors(colors):
 
 def set_brightness(brightness):
     cc = colorcontrol.ColorControl()
-    cc.set_brightness = brightness
+    cc.set_brightness(int(brightness))
 
 
 def entry_point():
