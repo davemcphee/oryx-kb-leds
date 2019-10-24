@@ -62,23 +62,23 @@ class ColorControl(object):
 
     def _forever_wrapper(self, func, *args, **kwargs):
         """checks for forever == True, and runs method in thread instead"""
-        if 'forever' in kwargs.keys() and kwargs['forever']:
-            # forever is set, run <func> it's own func forever (or interrupted)
-            our_func = getattr(self, func, None)
-            if callable(our_func):
-                t = Thread(target=our_func, args=args, kwargs=kwargs)
-                self.threads.append(t)
-                t.start()
+        our_func = getattr(self, func, None)
+        if callable(our_func):
+            if 'forever' in kwargs.keys() and kwargs['forever']:
+                    # forever is set, run <func> it's own func forever (or interrupted)
+                    t = Thread(target=our_func, args=args, kwargs=kwargs)
+                    self.threads.append(t)
+                    t.start()
             else:
-                raise NotImplementedError("Missing function {} - this is a bug".format(func))
+                our_func(*args, **kwargs)
         else:
-            self._breathe(*args, **kwargs)
+            raise NotImplementedError("Missing function {} - this is a bug".format(func))
 
     def breathe(self, *args, **kwargs):
         """either launches func _breathe, or runs it in it's own thread if forever"""
         self._forever_wrapper('_breathe', *args, **kwargs)
 
-    def _breathe(self, forever=False):
+    def _breathe(self):
         """
         Pulses brightness, speed depends on cpu load
         :return: True
