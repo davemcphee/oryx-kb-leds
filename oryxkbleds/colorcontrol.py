@@ -12,7 +12,7 @@ from threading import Thread, Event
 import psutil
 from colour import Color
 
-from oryxkbleds.oryxkbleds import OryxKBDLeds
+from oryxkbleds import ledcontrol
 
 
 class ColorControl(object):
@@ -20,7 +20,7 @@ class ColorControl(object):
     Uses OryxKBLeds class to implement some patterns.
     """
     def __init__(self):
-        self.led_controller = OryxKBDLeds()
+        self.led_controller = ledcontrol.OryxKBDLeds()
         self.threads = list()
         self.thread_stop = Event()
         self.should_reset = False
@@ -28,10 +28,10 @@ class ColorControl(object):
 
     def stop(self):
         if self.threads:
-            # print("setting kill flag")
             self.thread_stop.set()
             for t in self.threads:
                 t.join()
+            self.threads = list()
         if self.should_reset:
             self.led_controller.reset()
 
@@ -65,10 +65,10 @@ class ColorControl(object):
         our_func = getattr(self, func, None)
         if callable(our_func):
             if 'forever' in kwargs.keys() and kwargs['forever']:
-                    # forever is set, run <func> it's own func forever (or interrupted)
-                    t = Thread(target=our_func, args=args, kwargs=kwargs)
-                    self.threads.append(t)
-                    t.start()
+                # forever is set, run <func> it's own func forever (or interrupted)
+                t = Thread(target=our_func, args=args, kwargs=kwargs)
+                self.threads.append(t)
+                t.start()
             else:
                 our_func(*args, **kwargs)
         else:
@@ -78,7 +78,7 @@ class ColorControl(object):
         """either launches func _breathe, or runs it in it's own thread if forever"""
         self._forever_wrapper('_breathe', *args, **kwargs)
 
-    def _breathe(self):
+    def _breathe(self, *args, **kwargs):
         """
         Pulses brightness, speed depends on cpu load
         :return: True
@@ -86,18 +86,27 @@ class ColorControl(object):
 
         self.should_reset = True
 
+        forever = False
+        if 'forever' in kwargs.keys() and kwargs['forever']:
+            forever = True
+
         sleep_timers = [
             0.05, 0.04, 0.03, 0.02, 0.01, 0.009, 0.008, 0.005, 0.003, 0.001, 0.0007, 0.0005,
             0.0003, 0.0003, 0.0002, 0.0002, 0.0001
         ]
 
-        theta = 0.0
+        # calc sin(x) up to 0.9999.. until it starts to decrease again. Use this is a brightness value to simulate
+        # breathing.
+        theta = 0
         tan_list = []
+        last_sin_theta = -1
         while True:
-            tan_list.append(math.sin(theta))
-            theta += 0.01
-            if theta >= 3.14159:
+            this_sin_theta = math.sin(theta)
+            if this_sin_theta < last_sin_theta:
                 break
+            tan_list.append(this_sin_theta)
+            theta += 0.01
+            last_sin_theta = this_sin_theta
 
         # store last ... 3 cpu percent values and take average, to avoid jitter
         cpu_percent_cache = deque([], 7)
@@ -125,7 +134,10 @@ class ColorControl(object):
         self.led_controller.reset()
         return
 
-    def disco(self):
+    def disco(self, *args, **kwargs):
+        self._forever_wrapper('_disco', *args, **kwargs)
+
+    def _disco(self, *args, **kwargs):
         self.should_reset = True
 
         init_colors = list(self.led_controller.colors)
@@ -136,8 +148,8 @@ class ColorControl(object):
             for c in range(3):
                 init_colors[c] = random.choice(colors)
                 self.led_controller.colors = tuple(init_colors)
-                # time.sleep(0.05)
-            # time.sleep(0.05)
+            if self.thread_stop.is_set():
+                return
 
     @staticmethod
     def cast_colors(vals):
@@ -158,8 +170,8 @@ class ColorControl(object):
                 new_vals = tuple([Color(x).get_hex_l() for x in vals])
                 return tuple([x[1:].upper() for x in new_vals])
             except Exception:
-                print("What are these supposed to be, 3 colors?")
-                raise
+                print(f"{vals} - What are these supposed to be, 3 colors?")
+                return ValueError("{vals} - was expecting 3 colors")
 
     def set_colors(self, colors):
 
@@ -173,4 +185,5 @@ class ColorControl(object):
 
 # if __name__ == '__main__':
 #     cc = ColorControl()
-#     cc.set_colors(('red', 'blue', 'beige'))
+#     # cc.set_colors(('red', 'blue', 'beige'))
+#     cc.breathe(forever=True)
