@@ -17,7 +17,7 @@ def rnd_colors():
 
 @pytest.fixture
 def okbled():
-    from oryxkbleds.oryxkbleds import OryxKBDLeds
+    from oryxkbleds.ledcontrol import OryxKBDLeds
     return OryxKBDLeds()
 
 
