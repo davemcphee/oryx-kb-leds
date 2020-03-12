@@ -7,6 +7,9 @@ import yaml
 
 from . import colorcontrol
 
+# defining ColorControl() here so tests can inject their own
+_our_colorcontrol = colorcontrol.ColorControl()
+
 
 def parse_config(path):
     abs_path = path
@@ -32,26 +35,23 @@ def parse_config(path):
 
 
 def led_mode(mode):
-    cc = colorcontrol.ColorControl()
-    func = getattr(cc, mode, None)
+    func = getattr(_our_colorcontrol, mode, None)
 
     if not func:
         raise NotImplementedError(f"ColorControl.{func}() does not exist")
 
     try:
-        func()
+        func(forever=True)
     except KeyboardInterrupt:
-        pass
+        _our_colorcontrol.stop()
 
 
 def set_colors(colors):
-    cc = colorcontrol.ColorControl()
-    cc.set_colors(tuple(colors))
+    _our_colorcontrol.set_colors(tuple(colors))
 
 
 def set_brightness(brightness):
-    cc = colorcontrol.ColorControl()
-    cc.set_brightness(int(brightness))
+    _our_colorcontrol.set_brightness(int(brightness))
 
 
 def entry_point():
@@ -66,7 +66,7 @@ def entry_point():
     parser.add_argument('--brightness', '-b', help="set static brightness", dest="set_brightness")
 
     args = parser.parse_args()
-    # parser.parse_args('--foo 1 --foo 2'.split())
+
     if sum(map(bool, [args.conf_path, args.led_mode, args.set_colors, args.set_brightness])) > 1:
         parser.error("config, mode, colors and brightness are mutually exclusive")
 

@@ -8,7 +8,7 @@ def cc():
 
 
 def test_cc_led_controller(cc):
-    from oryxkbleds.oryxkbleds import OryxKBDLeds
+    from oryxkbleds.ledcontrol import OryxKBDLeds
     assert isinstance(cc.led_controller, OryxKBDLeds)
 
 
@@ -18,9 +18,9 @@ def test_stop(cc):
 
 
 def test_version_is_set(cc):
-    import oryxkbleds
-    assert oryxkbleds.__version__ is not None
-    assert isinstance(oryxkbleds.__version__, str)
+    from oryxkbleds import __version__
+    assert __version__.__version__ is not None
+    assert isinstance(__version__.__version__, str)
 
 
 def test_cast_colors_not_a_tuple(cc):
@@ -29,8 +29,7 @@ def test_cast_colors_not_a_tuple(cc):
 
 
 def test_cast_colors_not_real_colours(cc):
-    with pytest.raises(Exception):
-        cc.cast_colors(("reed", "bloo", "wite"))
+    assert isinstance(cc.cast_colors(("reed", "bloo", "wite")), ValueError)
 
 
 def test_cast_colors_0x_hex(cc):
@@ -49,3 +48,17 @@ def test_cast_colors_string_colors(cc):
     hex_vals = ("red", "pink", "PURPLE")
     ret = cc.cast_colors(hex_vals)
     assert ret == ("FF0000", "FFC0CB", "800080")
+
+
+def test_threaded_disco_stop(cc):
+    cc.disco(forever=True)
+    assert len(cc.threads) > 0
+    cc.stop()
+    assert len(cc.threads) == 0
+
+
+def test_threaded_breathe_stop(cc):
+    cc.breathe(forever=True)
+    assert len(cc.threads) > 0
+    cc.stop()
+    assert len(cc.threads) == 0
