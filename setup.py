@@ -57,6 +57,6 @@ setuptools.setup(
     install_requires=[
         'colour==0.1.5',
         'psutil==5.6.6',
-        'pyyaml==5.1.1'
+        'pyyaml==5.4'
     ]
 )
